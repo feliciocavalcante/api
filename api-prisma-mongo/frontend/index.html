@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo CRUD</title>
+</head>
+<body>
+  <h1>Lista de Tarefas</h1>
+
+  <form id="todoForm">
+    <input type="text" id="title" placeholder="Nova tarefa" required />
+    <button type="submit">Adicionar</button>
+  </form>
+
+  <ul id="todoList"></ul>
+
+  <script>
+    const api = 'http://localhost:3000/todos';
+    const form = document.getElementById('todoForm');
+    const list = document.getElementById('todoList');
+
+    async function fetchTodos() {
+      const res = await fetch(api);
+      const todos = await res.json();
+      list.innerHTML = '';
+      todos.forEach(todo => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          ${todo.title} - ${todo.completed ? "✅" : "❌"}
+          <button onclick="toggleTodo('${todo.id}', ${todo.completed})">Alterar</button>
+          <button onclick="deleteTodo('${todo.id}')">🗑️</button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    async function toggleTodo(id, completed) {
+      await fetch(`${api}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed: !completed })
+      });
+      fetchTodos();
+    }
+
+    async function deleteTodo(id) {
+      await fetch(`${api}/${id}`, { method: 'DELETE' });
+      fetchTodos();
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      await fetch(api, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      });
+      form.reset();
+      fetchTodos();
+    });
+
+    fetchTodos();
+  </script>
+</body>
+</html>
